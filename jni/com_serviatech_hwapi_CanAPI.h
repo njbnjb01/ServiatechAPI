@@ -12,7 +12,7 @@ extern "C" {
  * Method:    open
  * Signature: (Ljava/lang/String;)Ljava/io/FileDescriptor;
  */
-JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_open
+JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_opencan
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -20,7 +20,7 @@ JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_open
  * Method:    close
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_serviatech_hwapi_CanAPI_close
+JNIEXPORT void JNICALL Java_com_serviatech_hwapi_CanAPI_closecan
   (JNIEnv *, jobject);
 
 /*
@@ -28,16 +28,16 @@ JNIEXPORT void JNICALL Java_com_serviatech_hwapi_CanAPI_close
  * Method:    sendcan
  * Signature: (I[B)I
  */
-JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_write
-  (JNIEnv *, jobject, jint, jbyteArray,jint);
+JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_writecan
+  (JNIEnv *, jobject, jint, jbyteArray);
 
 /*
  * Class:     com_serviatech_hwapi_CanAPI
  * Method:    readcan
  * Signature: ()[B
  */
-JNIEXPORT jbyteArray JNICALL Java_com_serviatech_hwapi_CanAPI_read
-  (JNIEnv *, jobject,jint);
+JNIEXPORT jbyteArray JNICALL Java_com_serviatech_hwapi_CanAPI_readcan
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

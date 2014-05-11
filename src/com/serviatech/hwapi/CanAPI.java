@@ -1,7 +1,6 @@
 package com.serviatech.hwapi;
 
 import java.io.DataOutputStream;
-import java.io.FileDescriptor;
 
 import android.util.Log;
 
@@ -10,17 +9,31 @@ public class CanAPI {
 	private static final String TAG = "CanAPI";
 	
 	public int mFd;
-
+	public String cmd1;
+	public String cmd2;
+	public String cmd0;
+	public final byte a[]={(byte)0x00};
+	private String mycan;
+	
 	public CanAPI(String dev, int bitrate)
 	{
-
-		mFd = open(dev);
+		mycan=dev;
+		mFd = opencan(mycan);
 		if (mFd == -1) {
-	    		Log.e(TAG, "open "+dev+" failed!");
+	    		Log.e(TAG, "open "+mycan+" failed!");
 	    		return ;
 	   	}
-		exec_cmd("ip link set "+dev+" type can bitrate "+bitrate+"\n");
-		exec_cmd("ifconfig "+dev+" up\n");
+		cmd0 = "ifconfig "+mycan+" down\n";
+		cmd1 = "ip link set "+mycan+" type can bitrate "+bitrate+"\n";
+		cmd2 = "ifconfig "+mycan+" up\n";
+		exec_cmd(cmd0);
+		exec_cmd(cmd1);
+		exec_cmd(cmd2);
+		
+		
+		send(123,a);
+//		exec_cmd("ip link set can0 type can bitrate 125000\n");
+//		exec_cmd("ifconfig can0 up \n");
 	}
 	
 	public void exec_cmd(String cmd){		
@@ -29,7 +42,8 @@ public class CanAPI {
 			p = Runtime.getRuntime().exec("su");
 			DataOutputStream os = new DataOutputStream(p.getOutputStream());
 			os.writeBytes(cmd);
-			os.writeBytes("exit\n");
+			//os.writeBytes("exit\n");
+			
 			os.flush();
 
 			Log.e(TAG,cmd);
@@ -41,17 +55,33 @@ public class CanAPI {
 	}
 	public int send(int canid ,byte[] data){
 		int ret;
-		ret=write(canid, data, mFd);
+		ret=writecan(canid, data);
 		return ret;
 	}
-	public byte[] rev(){
-		return read(mFd);
+	public int[] receive(){
+		
+		byte data[];
+		
+		data = readcan();
+		Log.d(TAG, "datalength ="+data.length);
+		int ret[]=new int[data.length];
+		for(int i=0;i<data.length;i++){
+			ret[i] = (int)(data[i]&0xFF);
+			Log.i(TAG, "can1 recive:" + ret[i]);
+		}
+		return ret;
+	}
+	public void close(){
+		
+		closecan();
+		exec_cmd("ifconfig "+mycan+" down\n");
+		
 	}
 	//JNI
-	private native int open(String dev);
-	public native void close();
-	public native int write(int canid, byte[] data, int mfd);
-	public native byte[] read(int mfd);
+	private native int opencan(String dev);
+	public native void closecan();
+	public native int writecan(int canid, byte[] data);
+	public native byte[] readcan();
 	
 	static{
 		System.loadLibrary("CanAPI-jni");

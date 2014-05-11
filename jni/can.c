@@ -51,8 +51,6 @@ enum sock_type {
 struct sockaddr_can addr;
 int openfd = -1;
 
-
-
 #include <android/log.h>
 #define LOG_TAG "CanJNI"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
@@ -64,9 +62,9 @@ int openfd = -1;
  * Method:    open
  * Signature: (Ljava/lang/String;)Ljava/io/FileDescriptor;
  */
-JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_open
+JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_opencan
   (JNIEnv *env, jobject thiz, jstring dev){
-	jobject mFileDescriptor;
+
 	struct ifreq ifr;
 
 	const char *dev_name = (char *)(*env)->GetStringUTFChars(env, dev, NULL);
@@ -74,31 +72,28 @@ JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_open
 
 	openfd = socket(PF_CAN,SOCK_RAW,CAN_RAW);
 	LOGI("openfd = %d in open", openfd);
-	if (openfd < 0 )
-		{
-				 /* Throw an exception */
-				LOGE("Cannot open dev");
-				/* TODO: throw an exception */
-				return OPEN_DEV_ERROR;
-		}
+	if (openfd < 0 ){
+		/* Throw an exception */
+		LOGE("Cannot open dev");
+		/* TODO: throw an exception */
+		return OPEN_DEV_ERROR;
+	}
 
 	strcpy((char *)(ifr.ifr_name),dev_name);
 	ioctl(openfd, SIOCGIFINDEX,&ifr);
-	LOGI("#####can_ifindex = %x\n",ifr.ifr_ifindex);
+	LOGI("can_ifindex = %x\n",ifr.ifr_ifindex);
 
 	addr.can_family = AF_CAN;
 	addr.can_ifindex = ifr.ifr_ifindex;
 	bind(openfd, (struct sockaddr*)&addr, sizeof(addr));
 	(*env)->ReleaseStringUTFChars(env, dev, dev_name);
 
-	/* Create a corresponding file descriptor */
-	jclass cFileDescriptor = (*env)->FindClass(env, "java/io/FileDescriptor");
-	jmethodID iFileDescriptor = (*env)->GetMethodID(env, cFileDescriptor, "<init>", "()V");
-	jfieldID descriptorID = (*env)->GetFieldID(env, cFileDescriptor, "descriptor", "I");
-	mFileDescriptor = (*env)->NewObject(env, cFileDescriptor, iFileDescriptor);
-	(*env)->SetIntField(env, mFileDescriptor, descriptorID, (jint)openfd);
-	LOGI("mFileDescriptor = %d\n",mFileDescriptor);
-	return openfd;//返回打开的文件描述符
+	int loopback = 1; // 0表示关闭, 1表示开启(默认)
+	setsockopt(openfd, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &loopback, sizeof(loopback));
+	int ro = 1; // 0表示关闭(默认), 1表示开启
+	setsockopt(openfd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &ro, sizeof(ro));
+
+	return openfd;
 }
 
 /*
@@ -106,21 +101,12 @@ JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_open
  * Method:    close
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_serviatech_hwapi_CanAPI_close
+JNIEXPORT void JNICALL Java_com_serviatech_hwapi_CanAPI_closecan
   (JNIEnv *env, jobject thiz){
 	unsigned i;
-	jfieldID mFdID;
-	jclass SerialPortClass = (*env)->GetObjectClass(env, thiz);
-	jclass FileDescriptorClass = (*env)->FindClass(env, "java/io/FileDescriptor");
-
-	mFdID = (*env)->GetFieldID(env, SerialPortClass, "mFd", "Ljava/io/FileDescriptor;");
-
-	jfieldID descriptorID = (*env)->GetFieldID(env, FileDescriptorClass, "descriptor", "I");
-	jobject mFd = (*env)->GetObjectField(env, thiz, mFdID);
-	jint descriptor = (*env)->GetIntField(env, mFd, descriptorID);
-
-	LOGI("close(fd = %d)", descriptor);
-	close(descriptor);
+	LOGI("#########CloseCan");
+	close(openfd);
+	LOGI("openfd=%d",openfd);
 	openfd = -1;
 }
 
@@ -129,8 +115,8 @@ JNIEXPORT void JNICALL Java_com_serviatech_hwapi_CanAPI_close
  * Method:    sendcan
  * Signature: (I[B)I
  */
-JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_write
-  (JNIEnv *env, jobject thiz, jint canid, jbyteArray dataArr,jint mfd){
+JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_writecan
+  (JNIEnv *env, jobject thiz, jint canid, jbyteArray dataArr){
 
 	jbyte *data;
 
@@ -139,8 +125,9 @@ JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_write
 	int nbytes;
 	int i;
 
+	LOGI("#########WriteCan");
 	if(openfd < 0){
-		LOGE("can not open can dev");
+		LOGE("can is down");
 		return NO_DEVICE_OPEN;
 	}
 
@@ -160,8 +147,8 @@ JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_write
 	frame.can_id = canid;
 	frame.can_dlc = data_len;
 	LOGI("openfd = %d in write", openfd);
-	nbytes = sendto(mfd,&frame,sizeof(struct can_frame),0,(struct sockaddr*)&addr,sizeof(addr));
-
+	nbytes = sendto(openfd,&frame,sizeof(struct can_frame),0,(struct sockaddr*)&addr,sizeof(addr));
+	//nbytes = write(openfd, &frame, sizeof(frame));
 	(*env)->ReleaseByteArrayElements(env, dataArr,data,0);
 
 	return nbytes;//返回写入的字节数
@@ -172,8 +159,8 @@ JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_write
  * Method:    readcan
  * Signature: ()[B
  */
-JNIEXPORT jbyteArray JNICALL Java_com_serviatech_hwapi_CanAPI_read
-  (JNIEnv *env, jobject thiz, jint mfd){
+JNIEXPORT jbyteArray JNICALL Java_com_serviatech_hwapi_CanAPI_readcan
+  (JNIEnv *env, jobject thiz){
 	int i,  ret, s, len;
 	unsigned long nbytes;
 	struct ifreq ifr;
@@ -181,11 +168,11 @@ JNIEXPORT jbyteArray JNICALL Java_com_serviatech_hwapi_CanAPI_read
 
 	LOGI("#########ReadCan");
 	if(openfd < 0){
-		LOGE("can not open can dev");
+		LOGE("can is down");
 		return NO_DEVICE_OPEN;
 	}
-	LOGI("openfd = %d in read", openfd);
-	nbytes = recvfrom(mfd,&frame,sizeof(struct can_frame),0,(struct sockaddr *)&addr,&len);
+	LOGI("openfd = %d", openfd);
+	nbytes = recvfrom(openfd,&frame,sizeof(struct can_frame),0,(struct sockaddr *)&addr,&len);
 	////for debug
 	ifr.ifr_ifindex = addr.can_ifindex;
 	ioctl(s,SIOCGIFNAME,&ifr);
@@ -193,10 +180,11 @@ JNIEXPORT jbyteArray JNICALL Java_com_serviatech_hwapi_CanAPI_read
 	LOGI("frame message\n"
 		"--can_id = %x\n"
 		"--can_dlc = %x\n"
-		"--data = %x\n",frame.can_id,frame.can_dlc,frame.data);
+		"--data = %s\n",frame.can_id,frame.can_dlc,frame.data);
 
 	jbyte *by = (jbyte*)frame.data;
 	jbyteArray jarray = (*env)->NewByteArray(env,frame.can_dlc);
 	(*env)->SetByteArrayRegion(env,jarray, 0, frame.can_dlc, by);
+
 	return jarray;
 }
