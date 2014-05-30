@@ -88,10 +88,10 @@ JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_opencan
 	bind(openfd, (struct sockaddr*)&addr, sizeof(addr));
 	(*env)->ReleaseStringUTFChars(env, dev, dev_name);
 
-	int loopback = 1; // 0表示关闭, 1表示开启(默认)
-	setsockopt(openfd, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &loopback, sizeof(loopback));
-	int ro = 1; // 0表示关闭(默认), 1表示开启
-	setsockopt(openfd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &ro, sizeof(ro));
+//	int loopback = 1; // 0表示关闭, 1表示开启(默认)
+//	setsockopt(openfd, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &loopback, sizeof(loopback));
+//	int ro = 1; // 0表示关闭(默认), 1表示开启
+//	setsockopt(openfd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &ro, sizeof(ro));
 
 	return openfd;
 }

@@ -32,6 +32,7 @@ public class CanAPI {
 		
 		
 		send(123,a);
+		
 //		exec_cmd("ip link set can0 type can bitrate 125000\n");
 //		exec_cmd("ifconfig can0 up \n");
 	}
@@ -42,7 +43,7 @@ public class CanAPI {
 			p = Runtime.getRuntime().exec("su");
 			DataOutputStream os = new DataOutputStream(p.getOutputStream());
 			os.writeBytes(cmd);
-			//os.writeBytes("exit\n");
+			os.writeBytes("exit\n");
 			
 			os.flush();
 

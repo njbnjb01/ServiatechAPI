@@ -123,6 +123,12 @@ JNIEXPORT jobject JNICALL JNICALL Java_com_serviatech_hwapi_SerialPort_open
 		cfsetispeed(&cfg, speed);
 		cfsetospeed(&cfg, speed);
 
+//		cfg.c_cc[VMIN]=0;
+//		//attr.c_iflag&=~(INLCR|IGNCR|ICRNL);
+//		cfg.c_iflag=0;
+//		cfg.c_oflag&=~(ONLCR|OCRNL);
+//		cfg.c_lflag=0;
+//		cfg.c_cflag=CS8|CLOCAL|CREAD;
 		if (tcsetattr(fd, TCSANOW, &cfg))
 		{
 			LOGE("tcsetattr() failed");
