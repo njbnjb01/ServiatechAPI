@@ -9,15 +9,15 @@ extern "C" {
 #endif
 /*
  * Class:     com_serviatech_hwapi_CanAPI
- * Method:    open
- * Signature: (Ljava/lang/String;)Ljava/io/FileDescriptor;
+ * Method:    opencan
+ * Signature: (Ljava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_opencan
   (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     com_serviatech_hwapi_CanAPI
- * Method:    close
+ * Method:    closecan
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_com_serviatech_hwapi_CanAPI_closecan
@@ -25,7 +25,7 @@ JNIEXPORT void JNICALL Java_com_serviatech_hwapi_CanAPI_closecan
 
 /*
  * Class:     com_serviatech_hwapi_CanAPI
- * Method:    sendcan
+ * Method:    writecan
  * Signature: (I[B)I
  */
 JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_writecan
@@ -34,10 +34,18 @@ JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_writecan
 /*
  * Class:     com_serviatech_hwapi_CanAPI
  * Method:    readcan
- * Signature: ()[B
+ * Signature: ()Lcom/serviatech/hwapi/CanFrame;
  */
-JNIEXPORT jbyteArray JNICALL Java_com_serviatech_hwapi_CanAPI_readcan
+JNIEXPORT jobject JNICALL Java_com_serviatech_hwapi_CanAPI_readcan
   (JNIEnv *, jobject);
+
+/*
+ * Class:     com_serviatech_hwapi_CanAPI
+ * Method:    setFilter
+ * Signature: (II)I
+ */
+JNIEXPORT jint JNICALL Java_com_serviatech_hwapi_CanAPI_setFilter
+  (JNIEnv *, jobject, jint, jint);
 
 #ifdef __cplusplus
 }
