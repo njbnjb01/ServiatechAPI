@@ -37,6 +37,14 @@ public class CanAPI {
 //		exec_cmd("ifconfig can0 up \n");
 	}
 	
+	public int getNum(){
+		int num=0;
+		
+		//exec_cmd();
+		
+		return num;
+	}
+	
 	public void exec_cmd(String cmd){		
 		  try {
 			Process p;
@@ -84,7 +92,7 @@ public class CanAPI {
 	public native void closecan();
 	public native int writecan(int canid, byte[] data);//返回成功写入字节数
 	public native CanFrame readcan();
-	public native int setFilter(int canid, int mask);//返回零成功
+	public native int setFilter(int canid, int mask);//设置过滤规则，返回零成功
 	static{
 		System.loadLibrary("CanAPI-jni");
 	}

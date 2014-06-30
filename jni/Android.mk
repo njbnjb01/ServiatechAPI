@@ -32,3 +32,13 @@ LOCAL_CERTIFICATE := platform
 LOCAL_LDLIBS    :=-lm -llog
 
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
+#TARGET_PLATFORM := android-3
+LOCAL_MODULE    := GPIO-jni
+LOCAL_SRC_FILES := gpio.c
+LOCAL_CERTIFICATE := platform
+LOCAL_LDLIBS    :=-lm -llog
+
+include $(BUILD_SHARED_LIBRARY)

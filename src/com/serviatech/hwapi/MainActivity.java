@@ -47,10 +47,18 @@ public class MainActivity extends Activity {
 		//Log.i(TAG, "sendbytes1 = "+sendbytes1);
 //		can0.closecan();
 		
-		can0.setFilter(0x124,0x124);
+//		can0.setFilter(0x124,0x124);
 		int m=0;
 		while(true){
+			
 			mCanFrame=can0.readcan();
+			
+			int value = GPIO.read(114);
+			
+			Log.e(TAG,"gpio114 value="+value);
+			value = GPIO.read(117);
+			Log.e(TAG,"gpio117 value="+value);
+			
 //			bufcan1=can1.read();
 			Log.i(TAG, "canid="+Integer.toHexString(mCanFrame.id)+" dlc="+mCanFrame.dlc);
 			for(int i=0;i<mCanFrame.data.length;i++){
